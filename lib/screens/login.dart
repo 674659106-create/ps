@@ -256,7 +256,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       // TODO: Navigate to register screen
                     },
                     child: const Text(
-                      'สมัครสมาชิก',
+                      'สมัครสมาชิก ',
                       style: TextStyle(
                         color: Color(0xFF2E7D32),
                         fontWeight: FontWeight.bold,
