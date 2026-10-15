@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'settings_screen.dart';
 
 class NotificationsScreen extends StatelessWidget {
   const NotificationsScreen({super.key});
@@ -26,7 +27,12 @@ class NotificationsScreen extends StatelessWidget {
           IconButton(
             icon: const Icon(Icons.settings_outlined, color: Colors.black87),
             onPressed: () {
-              // TODO: Notification settings
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const SettingsScreen(),
+                ),
+              );
             },
           ),
         ],
@@ -91,7 +97,12 @@ class NotificationsScreen extends StatelessWidget {
               height: 50,
               child: OutlinedButton(
                 onPressed: () {
-                  // TODO: Notification settings action
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const SettingsScreen(),
+                    ),
+                  );
                 },
                 style: OutlinedButton.styleFrom(
                   side: const BorderSide(color: Color(0xFF2E7D32)),

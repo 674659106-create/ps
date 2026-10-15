@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../models/app_state.dart';
 import 'fridge_items_screen.dart';
 import 'add_food_screen.dart';
 import 'shopping_list_screen.dart';
@@ -15,36 +16,45 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   int _currentIndex = 0;
+  final AppState _appState = AppState();
 
-  final List<Map<String, dynamic>> _nearExpiryItems = [
-    {
-      'name': 'นมสด',
-      'category': 'เครื่องดื่ม',
-      'expiryDate': '12 พ.ค. 2567',
-      'status': 'เหลือ 2 วัน',
-      'statusColor': Colors.orange,
-      'icon': Icons.local_drink,
-    },
-    {
-      'name': 'อกไก่',
-      'category': 'เนื้อสัตว์',
-      'expiryDate': '13 พ.ค. 2567',
-      'status': 'เหลือ 1 วัน',
-      'statusColor': Colors.deepOrange,
-      'icon': Icons.set_meal,
-    },
-    {
-      'name': 'มะเขือเทศ',
-      'category': 'ผักผลไม้',
-      'expiryDate': '16 พ.ค. 2567',
-      'status': 'เหลือ 5 วัน',
-      'statusColor': Colors.green,
-      'icon': Icons.eco,
-    },
-  ];
+  @override
+  void initState() {
+    super.initState();
+    _appState.addListener(_onAppStateChanged);
+  }
+
+  @override
+  void dispose() {
+    _appState.removeListener(_onAppStateChanged);
+    super.dispose();
+  }
+
+  void _onAppStateChanged() {
+    setState(() {});
+  }
+
+  Map<String, String> _getGreeting() {
+    final hour = DateTime.now().hour;
+    if (hour >= 5 && hour < 9) {
+      return {'text': 'สวัสดีตอนเช้า! ', 'emoji': '☀️'};
+    } else if (hour >= 9 && hour < 12) {
+      return {'text': 'สวัสดีตอนสาย! ', 'emoji': '🌤️'};
+    } else if (hour >= 12 && hour < 14) {
+      return {'text': 'สวัสดีตอนเที่ยง! ', 'emoji': '🕛'};
+    } else if (hour >= 14 && hour < 17) {
+      return {'text': 'สวัสดีตอนบ่าย! ', 'emoji': '☀️'};
+    } else if (hour >= 17 && hour < 20) {
+      return {'text': 'สวัสดีตอนเย็น! ', 'emoji': '🌇'};
+    } else {
+      return {'text': 'สวัสดีตอนกลางคืน! ', 'emoji': '🌙'};
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
+    final nearExpiryList = _appState.fridgeItems.take(3).toList();
+
     return Scaffold(
       backgroundColor: const Color(0xFFF7F9F8),
       body: SafeArea(
@@ -53,7 +63,7 @@ class _HomeScreenState extends State<HomeScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Header Row: Greeting & Notification
+              // Header Row: Greeting & Actions
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
@@ -61,21 +71,21 @@ class _HomeScreenState extends State<HomeScreen> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Row(
-                        children: const [
+                        children: [
                           Text(
-                            'สวัสดีตอนเช้า! ',
-                            style: TextStyle(
+                            _getGreeting()['text']!,
+                            style: const TextStyle(
                               fontSize: 22,
                               fontWeight: FontWeight.bold,
                               color: Colors.black87,
                             ),
                           ),
-                          Text('☀️', style: TextStyle(fontSize: 20)),
+                          Text(_getGreeting()['emoji']!, style: const TextStyle(fontSize: 20)),
                         ],
                       ),
                       const SizedBox(height: 4),
                       const Text(
-                        'มาดูกู้ตู้เย็นกันว่ามีอะไรในตู้เย็นบ้าง',
+                        'มาดูตู้เย็นกันว่ามีอะไรในตู้เย็นบ้าง',
                         style: TextStyle(
                           fontSize: 14,
                           color: Colors.grey,
@@ -154,11 +164,11 @@ class _HomeScreenState extends State<HomeScreen> {
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceAround,
                     children: [
-                      _buildSummaryItem('ทั้งหมดในตู้เย็น', '18', 'รายการ', const Color(0xFF2E7D32)),
+                      _buildSummaryItem('ทั้งหมดในตู้เย็น', '${_appState.totalItems}', 'รายการ', const Color(0xFF2E7D32)),
                       Container(height: 40, width: 1, color: Colors.grey.shade200),
-                      _buildSummaryItem('ใกล้หมดอายุ', '3', 'รายการ', Colors.orange),
+                      _buildSummaryItem('ใกล้หมดอายุ', '${_appState.nearExpiryItemsCount}', 'รายการ', Colors.orange),
                       Container(height: 40, width: 1, color: Colors.grey.shade200),
-                      _buildSummaryItem('หมดอายุแล้ว', '0', 'รายการ', Colors.red),
+                      _buildSummaryItem('หมดอายุแล้ว', '${_appState.expiredItemsCount}', 'รายการ', Colors.red),
                     ],
                   ),
                 ),
@@ -199,87 +209,89 @@ class _HomeScreenState extends State<HomeScreen> {
               const SizedBox(height: 12),
 
               // Near Expiry List
-              ListView.builder(
-                shrinkWrap: true,
-                physics: const NeverScrollableScrollPhysics(),
-                itemCount: _nearExpiryItems.length,
-                itemBuilder: (context, index) {
-                  final item = _nearExpiryItems[index];
-                  return Container(
-                    margin: const EdgeInsets.only(bottom: 12),
-                    padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(16),
-                      border: Border.all(color: Colors.grey.shade100),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withOpacity(0.02),
-                          blurRadius: 6,
-                          offset: const Offset(0, 2),
-                        ),
-                      ],
-                    ),
-                    child: Row(
-                      children: [
-                        Container(
-                          width: 50,
-                          height: 50,
+              nearExpiryList.isEmpty
+                  ? const Center(
+                      child: Padding(
+                        padding: EdgeInsets.all(20.0),
+                        child: Text('ไม่มีอาหารใกล้หมดอายุ', style: TextStyle(color: Colors.grey)),
+                      ),
+                    )
+                  : ListView.builder(
+                      shrinkWrap: true,
+                      physics: const NeverScrollableScrollPhysics(),
+                      itemCount: nearExpiryList.length,
+                      itemBuilder: (context, index) {
+                        final item = nearExpiryList[index];
+                        return Container(
+                          margin: const EdgeInsets.only(bottom: 12),
+                          padding: const EdgeInsets.all(12),
                           decoration: BoxDecoration(
-                            color: const Color(0xFFE8F5E9),
-                            borderRadius: BorderRadius.circular(12),
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(16),
+                            border: Border.all(color: Colors.grey.shade100),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withOpacity(0.02),
+                                blurRadius: 6,
+                                offset: const Offset(0, 2),
+                              ),
+                            ],
                           ),
-                          child: Icon(item['icon'], color: const Color(0xFF2E7D32)),
-                        ),
-                        const SizedBox(width: 16),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
+                          child: Row(
                             children: [
-                              Text(
-                                item['name'],
-                                style: const TextStyle(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.black87,
+                              Container(
+                                width: 50,
+                                height: 50,
+                                decoration: BoxDecoration(
+                                  color: const Color(0xFFE8F5E9),
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                child: Icon(item.icon, color: const Color(0xFF2E7D32)),
+                              ),
+                              const SizedBox(width: 16),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      item.name,
+                                      style: const TextStyle(
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.bold,
+                                        color: Colors.black87,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 4),
+                                    Text(
+                                      'หมดอายุ ${item.expiryDate}',
+                                      style: const TextStyle(
+                                        fontSize: 13,
+                                        color: Colors.grey,
+                                      ),
+                                    ),
+                                  ],
                                 ),
                               ),
-                              const SizedBox(height: 4),
-                              Text(
-                                'หมดอายุ ${item['expiryDate']}',
-                                style: const TextStyle(
-                                  fontSize: 13,
-                                  color: Colors.grey,
+                              Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                                decoration: BoxDecoration(
+                                  color: item.statusColor.withOpacity(0.1),
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                                child: Text(
+                                  item.status,
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.bold,
+                                    color: item.statusColor,
+                                  ),
                                 ),
                               ),
                             ],
                           ),
-                        ),
-                        Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                          decoration: BoxDecoration(
-                            color: item['statusColor'].withOpacity(0.1),
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          child: Text(
-                            item['status'],
-                            style: TextStyle(
-                              fontSize: 12,
-                              fontWeight: FontWeight.bold,
-                              color: item['statusColor'],
-                            ),
-                          ),
-                        ),
-                        const SizedBox(width: 4),
-                        IconButton(
-                          icon: const Icon(Icons.more_vert, color: Colors.grey),
-                          onPressed: () {},
-                        ),
-                      ],
+                        );
+                      },
                     ),
-                  );
-                },
-              ),
             ],
           ),
         ),
