@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'login.dart';
+import 'statistics_screen.dart';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
@@ -267,6 +268,19 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     icon: Icons.notifications_none,
                     title: 'ตั้งค่าการแจ้งเตือน',
                     onTap: _editNotifications,
+                  ),
+                  _buildDivider(),
+                  _buildSettingsTile(
+                    icon: Icons.bar_chart,
+                    title: 'สถิติ & รายงาน',
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const StatisticsScreen(),
+                        ),
+                      );
+                    },
                   ),
                   _buildDivider(),
                   _buildSettingsTile(
